@@ -6,23 +6,23 @@ from logger import setup_logger
 logger = setup_logger(__name__)
 
 
+app = Flask(__name__)
+price_service = PriceService()
+
+@app.route("/")
+def index():
+    try:
+        prices = price_service.get_prices(DEFAULT_COINS)
+        return render_template_string(_html_template(), prices=prices)
+    except Exception:
+        logger.error("Failed to load prices", exc_info=True)
+        return "Service unavailable", 503
+
+@app.route("/health")
+def health():
+    return jsonify(status="ok")
+
 def start_web_app() -> None:
-    app = Flask(__name__)
-    price_service = PriceService()
-
-    @app.route("/")
-    def index():
-        try:
-            prices = price_service.get_prices(DEFAULT_COINS)
-            return render_template_string(_html_template(), prices=prices)
-        except Exception:
-            logger.error("Failed to load prices", exc_info=True)
-            return "Service unavailable", 503
-
-    @app.route("/health")
-    def health():
-        return jsonify(status="ok")
-
     logger.info("Starting web interface")
     app.run(debug=True)
 
